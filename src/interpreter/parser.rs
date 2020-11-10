@@ -1,29 +1,29 @@
 use crate::*;
 
-pub fn parse_program(source: &str) -> Program {
-    let mut instructions = vec![];
-    let mut is_commenting = false;
+// pub fn parse_program(source: &str) -> Program {
+//     let mut instructions = vec![];
+//     let mut is_commenting = false;
 
-    for c in source.chars() {
-        match c {
-            '#' => {
-                is_commenting = true;
-            }
-            '\n' => {
-                is_commenting = false;
-            }
-            _ => {
-                if let Some(instruction) = parse_instruction(&c) {
-                    if !is_commenting {
-                        instructions.push(instruction);
-                    }
-                }
-            }
-        }
-    }
+//     for c in source.chars() {
+//         match c {
+//             '#' => {
+//                 is_commenting = true;
+//             }
+//             '\n' => {
+//                 is_commenting = false;
+//             }
+//             _ => {
+//                 if let Some(instruction) = parse_instruction(&c) {
+//                     if !is_commenting {
+//                         instructions.push(instruction);
+//                     }
+//                 }
+//             }
+//         }
+//     }
 
-    Program::new(instructions)
-}
+//     Program::new(instructions)
+// }
 
 pub fn parse_instruction(c: &char) -> Option<Instruction> {
     use Instruction::*;

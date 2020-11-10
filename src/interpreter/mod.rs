@@ -1,25 +1,31 @@
-use std::collections::BTreeMap;
-
+use std::io;
 use std::io::{BufReader, BufWriter, Read, Write};
 
 use crate::*;
 
-mod grid;
-pub use grid::*;
+mod parser;
+pub use parser::*;
 
 #[derive(Default)]
 pub struct Interpreter<'a, G: Grid> {
     source: &'a str,
     reader: Option<BufReader<&'a mut dyn Read>>,
     writer: Option<BufWriter<&'a mut dyn Write>>,
-    pointers: Vec<Pointer>,
-    grid: G,
-    saved_positions: BTreeMap<u8, Position>,
-    string_mode: Option<StringModeKind>,
-    is_commenting: bool,
+    state: ProgramState<G>,
 }
 
 impl<'a, G: Grid> Interpreter<'a, G> {
+    pub fn run(&mut self) -> io::Result<()> {
+        unimplemented!()
+    }
+
+    pub fn step(&mut self) -> io::Result<()> {
+        unimplemented!()
+    }
+
+    pub fn state(&self) -> &ProgramState<G> {
+        &self.state
+    }
 }
 
 pub struct InterpreterBuilder<'a> {
@@ -55,10 +61,4 @@ impl<'a> InterpreterBuilder<'a> {
             ..Default::default()
         }
     }
-}
-
-struct Pointer {
-    position: Position,
-    stack: Vec<Position>,
-    value: u8,
 }

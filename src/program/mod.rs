@@ -1,26 +1,42 @@
+use std::collections::BTreeMap;
+
 use std::ops::{Add, Sub};
 
+mod grid;
+pub use grid::*;
+
 #[derive(Clone, Debug)]
-pub struct Program {
-    instructions: Vec<Instruction>,
+pub struct ProgramState<G: Grid> {
+    pub grid: G,
+    pub pointers: Vec<Pointer>,
+    pub saved_positions: BTreeMap<u8, Position>,
+    pub string_mode: Option<StringModeKind>,
 }
 
-impl Program {
-    pub fn new(instructions: Vec<Instruction>) -> Program {
-        Program {
-            instructions,
+impl<G: Grid> Default for ProgramState<G> {
+    fn default() -> Self {
+        Self {
+            pointers: vec![Pointer::default()],
+            ..Default::default()
         }
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default)]
+pub struct Pointer {
+    pub position: Position,
+    pub stack: Vec<Position>,
+    pub value: u8,
+}
+
+#[derive(Copy, Clone, Debug, Default, Hash, PartialEq, Eq)]
 pub struct Position {
-    pub x: u8,
-    pub y: u8,
+    pub x: isize,
+    pub y: isize,
 }
 
 impl Position {
-    pub fn new(x: u8, y: u8) -> Self {
+    pub fn new(x: isize, y: isize) -> Self {
         Self {
             x, y,
         }
@@ -47,12 +63,6 @@ impl Sub for Position {
             y: self.y.wrapping_sub(other.y),
         }
     }
-}
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum StringModeKind {
-    Single,
-    Double,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -94,4 +104,10 @@ pub enum Direction {
     Right,
     Up,
     Down,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum StringModeKind {
+    Single,
+    Double,
 }
