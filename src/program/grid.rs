@@ -104,7 +104,7 @@ impl Default for Chunk {
 
 fn position_to_chunk(pos: &Position) -> (ChunkCoord, ChunkOffset) {
     let coord = (pos.x / CHUNK_LENGTH as isize, pos.y / CHUNK_LENGTH as isize);
-    let offset = (pos.x.rem_euclid(coord.0) as usize, pos.y.rem_euclid(coord.1) as usize);
+    let offset = (pos.x.rem_euclid(CHUNK_LENGTH as isize) as usize, pos.y.rem_euclid(CHUNK_LENGTH as isize) as usize);
 
     (coord, offset)
 }

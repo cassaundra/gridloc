@@ -1,23 +1,22 @@
 use std::io;
-use std::io::{BufReader, BufWriter, Read, Write};
+use std::io::{BufRead, Write};
 
 use crate::*;
 
-mod parser;
-pub use parser::*;
-
 pub struct Interpreter<'a, G: Grid> {
-    reader: Option<BufReader<&'a mut dyn Read>>,
-    writer: Option<BufWriter<&'a mut dyn Write>>,
-    state: ProgramState<G>,
+    reader: Box<dyn BufRead>,
+    writer: Box<dyn Write>,
+    state: ProgramState<'a, G>,
 }
 
-impl<'a, G: Grid> Interpreter<'a, G> {
-    pub fn state(&self) -> &ProgramState<G> {
+impl<'a, G: 'a + Grid> Interpreter<'a, G> {
+    pub fn state(&self) -> &ProgramState<'a, G> {
         &self.state
     }
 
     pub fn run(&mut self) -> io::Result<()> {
+        while self.state.step(&mut self.reader, &mut self.writer)? {}
+
         Ok(())
     }
 
@@ -28,8 +27,8 @@ impl<'a, G: Grid> Interpreter<'a, G> {
 
 pub struct InterpreterBuilder<'a> {
     source: &'a str,
-    reader: Option<BufReader<&'a mut dyn Read>>,
-    writer: Option<BufWriter<&'a mut dyn Write>>,
+    reader: Option<Box<dyn BufRead>>,
+    writer: Option<Box<dyn Write>>,
 }
 
 impl<'a> InterpreterBuilder<'a> {
@@ -41,23 +40,23 @@ impl<'a> InterpreterBuilder<'a> {
         }
     }
 
-    pub fn reader(mut self, reader: &'a mut dyn Read) -> Self {
-        self.reader = Some(BufReader::new(reader));
+    pub fn reader(mut self, reader: Box<dyn BufRead>) -> Self {
+        self.reader = Some(Box::new(reader));
         self
     }
 
-    pub fn writer(mut self, writer: &'a mut dyn Write) -> Self  {
-        self.writer = Some(BufWriter::new(writer));
+    pub fn writer(mut self, writer: Box<dyn Write>) -> Self {
+        self.writer = Some(Box::new(writer));
         self
     }
 
-    pub fn build<G: Grid>(self) -> Interpreter<'a, G> {
+    pub fn build<G: Grid + 'a>(self) -> Interpreter<'a, G> {
         let tape = SourceTape::from(self.source);
         let program_state = ProgramState::new(Box::new(tape));
 
         Interpreter {
-            reader: self.reader,
-            writer: self.writer,
+            reader: self.reader.unwrap_or(Box::new(io::empty())),
+            writer: self.writer.unwrap_or(Box::new(io::sink())),
             state: program_state,
         }
     }
@@ -66,21 +65,6 @@ impl<'a> InterpreterBuilder<'a> {
 struct SourceTape {
     source: Vec<u8>,
     index: usize,
-}
-
-impl From<&[u8]> for SourceTape {
-    fn from(slice: &[u8]) -> SourceTape {
-        Self {
-            source: slice.to_owned(),
-            index: 0,
-        }
-    }
-}
-
-impl From<&str> for SourceTape {
-    fn from(s: &str) -> SourceTape {
-        s.as_bytes().into()
-    }
 }
 
 impl EvalTape for SourceTape {
@@ -101,5 +85,20 @@ impl EvalTape for SourceTape {
         } else {
             None
         }
+    }
+}
+
+impl From<&[u8]> for SourceTape {
+    fn from(slice: &[u8]) -> SourceTape {
+        Self {
+            source: slice.to_owned(),
+            index: 0,
+        }
+    }
+}
+
+impl From<&str> for SourceTape {
+    fn from(s: &str) -> SourceTape {
+        s.as_bytes().into()
     }
 }
