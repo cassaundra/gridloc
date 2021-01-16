@@ -1,7 +1,6 @@
 use ndarray::Array2;
 
-use std::cell::RefCell;
-use std::collections::{HashMap, hash_map::Entry};
+use std::collections::HashMap;
 
 use crate::*;
 
@@ -9,7 +8,7 @@ type ChunkCoord = (isize, isize);
 type ChunkOffset = (usize, usize);
 
 const CHUNK_LENGTH: usize = 8;
-const CHUNK_SIZE: usize = CHUNK_LENGTH * CHUNK_LENGTH;
+// const CHUNK_SIZE: usize = CHUNK_LENGTH * CHUNK_LENGTH;
 
 pub trait Grid: Default {
     fn get(&self, pos: &Position) -> u8;

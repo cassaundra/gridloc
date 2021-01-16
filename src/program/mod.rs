@@ -88,12 +88,12 @@ impl<'a, G: 'a + Grid> ProgramState<'a, G> {
             }
             StartLoop => {
                 if p_value == 0 {
-                    self.jump_loop(true);
+                    self.jump_loop_forwards();
                 }
             }
             EndLoop => {
                 if p_value != 0 {
-                    self.jump_loop(false);
+                    self.jump_loop_backwards();
                 }
             }
             Kill => {
@@ -222,18 +222,19 @@ impl<'a, G: 'a + Grid> ProgramState<'a, G> {
                             IOKind::Character => (g_value as char).to_string(),
                             IOKind::Number => format!("{}", g_value),
                             IOKind::String => {
-                                let mut str = String::new();
+                                let mut s = String::new();
                                 let mut current_value = g_value;
 
                                 while current_value != 0 {
-                                    str.push(current_value as char);
+                                    // push the character value to the string
+                                    s.push(current_value as char);
 
                                     // move pointer
                                     pointer.move_pointer(1);
                                     current_value = self.grid.borrow().get(&pointer.position);
                                 }
 
-                                str
+                                s
                             },
                         };
 
@@ -295,6 +296,14 @@ impl<'a, G: 'a + Grid> ProgramState<'a, G> {
                 }
             }
         }
+    }
+
+    fn jump_loop_forwards(&mut self) {
+        self.jump_loop(true)
+    }
+
+    fn jump_loop_backwards(&mut self) {
+        self.jump_loop(false)
     }
 }
 
