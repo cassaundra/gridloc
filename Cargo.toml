@@ -1,8 +1,5 @@
-[package]
-name = "gridloc"
-version = "0.1.0"
-authors = ["Cassaundra <cass@cassaundra.io>"]
-edition = "2018"
-
-[dependencies]
-ndarray = "0.13.1"
+[workspace]
+members = [
+    "gridloc-cli",
+    "gridloc-lib",
+]

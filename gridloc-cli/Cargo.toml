@@ -1,0 +1,9 @@
+[package]
+name = "gridloc-cli"
+version = "0.1.0"
+authors = ["Cassaundra <cass@cassaundra.io>"]
+edition = "2018"
+
+[dependencies]
+gridloc-lib = { path = "../gridloc-lib" }
+structopt = "0.3"
