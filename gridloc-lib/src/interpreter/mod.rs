@@ -1,27 +1,29 @@
 use std::io;
 use std::io::{BufRead, Write};
 
+use rand::{rngs::ThreadRng, thread_rng};
+
 use crate::*;
 
-pub struct Interpreter<'a, G: Grid> {
+pub struct Interpreter<'a, G: 'a + Grid> {
     reader: Box<dyn BufRead>,
     writer: Box<dyn Write>,
-    state: ProgramState<'a, G>,
+    state: ProgramState<'a, G, ThreadRng>,
 }
 
 impl<'a, G: 'a + Grid> Interpreter<'a, G> {
-    pub fn state(&self) -> &ProgramState<'a, G> {
+    pub fn state(&self) -> &ProgramState<'a, G, ThreadRng> {
         &self.state
     }
 
     pub fn run(&mut self) -> io::Result<()> {
-        while self.state.step(&mut self.reader, &mut self.writer)? {}
+        while self.step()? {}
 
         Ok(())
     }
 
-    pub fn step(&mut self) -> io::Result<()> {
-        Ok(())
+    pub fn step(&mut self) -> io::Result<bool> {
+        self.state.step(&mut self.reader, &mut self.writer)
     }
 }
 
@@ -52,7 +54,7 @@ impl<'a> InterpreterBuilder<'a> {
 
     pub fn build<G: Grid + 'a>(self) -> Interpreter<'a, G> {
         let tape = SourceTape::from(self.source);
-        let program_state = ProgramState::new(Box::new(tape));
+        let program_state = ProgramState::new(Box::new(tape), thread_rng());
 
         Interpreter {
             reader: self.reader.unwrap_or(Box::new(io::empty())),

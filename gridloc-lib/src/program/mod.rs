@@ -11,22 +11,24 @@ pub use grid::*;
 mod parser;
 pub use parser::*;
 
-pub struct ProgramState<'a, G: Grid> {
-    eval_tapes: Vec<Box<dyn EvalTape + 'a>>,
-    grid: Rc<RefCell<G>>,
-    pointers: Vec<Rc<RefCell<Pointer>>>,
-    saved_positions: BTreeMap<u8, Position>,
-    string_mode: Option<StringModeKind>,
+pub struct ProgramState<'a, G: Grid, Rng: rand::Rng> {
+    pub eval_tapes: Vec<Box<dyn EvalTape + 'a>>,
+    pub grid: Rc<RefCell<G>>,
+    pub pointers: Vec<Rc<RefCell<Pointer>>>,
+    pub saved_positions: BTreeMap<u8, Position>,
+    pub string_mode: Option<StringModeKind>,
+    rng: Rng,
 }
 
-impl<'a, G: 'a + Grid> ProgramState<'a, G> {
-    pub fn new(program: Box<dyn EvalTape>) -> Self {
+impl<'a, G: 'a + Grid, Rng: rand::Rng> ProgramState<'a, G, Rng> {
+    pub fn new(program: Box<dyn EvalTape>, rng: Rng) -> Self {
         Self {
             eval_tapes: vec![program],
             grid: Rc::new(RefCell::new(G::default())),
             pointers: vec![Rc::new(RefCell::new(Pointer::default()))],
             saved_positions: BTreeMap::new(),
             string_mode: None,
+            rng,
         }
     }
 
@@ -216,6 +218,9 @@ impl<'a, G: 'a + Grid> ProgramState<'a, G> {
                     }
                     LogicalNot => {
                         pointer.value = (p_value == 0) as u8;
+                    }
+                    Random => {
+
                     }
                     Write { kind } => {
                         let value = match kind {
@@ -447,6 +452,7 @@ pub enum Instruction {
     LogicalAnd,
     LogicalOr,
     LogicalNot,
+    Random,
     Write { kind: IOKind },
     Read { kind: IOKind },
 }

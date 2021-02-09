@@ -39,6 +39,7 @@ pub fn parse_instruction(c: char) -> Option<Instruction> {
         '&' => LogicalAnd,
         '|' => LogicalOr,
         '!' => LogicalNot,
+        '?' => Random,
         'x' => Write { kind: IOKind::Character },
         'n' => Write { kind: IOKind::Number },
         's' => Write { kind: IOKind::String },
