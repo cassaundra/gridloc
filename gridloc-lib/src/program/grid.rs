@@ -8,7 +8,7 @@ type ChunkCoord = (isize, isize);
 type ChunkOffset = (usize, usize);
 
 const CHUNK_LENGTH: usize = 8;
-// const CHUNK_SIZE: usize = CHUNK_LENGTH * CHUNK_LENGTH;
+const CHUNK_SIZE: usize = CHUNK_LENGTH * CHUNK_LENGTH;
 
 pub trait Grid: Default {
     fn get(&self, pos: &Position) -> u8;
@@ -102,8 +102,19 @@ impl Default for Chunk {
 }
 
 fn position_to_chunk(pos: &Position) -> (ChunkCoord, ChunkOffset) {
-    let coord = (pos.x / CHUNK_LENGTH as isize, pos.y / CHUNK_LENGTH as isize);
-    let offset = (pos.x.rem_euclid(CHUNK_LENGTH as isize) as usize, pos.y.rem_euclid(CHUNK_LENGTH as isize) as usize);
+    let mut coord = (pos.x / CHUNK_LENGTH as isize, pos.y / CHUNK_LENGTH as isize);
+
+    // offset negative chunk coords
+
+    if pos.x < 0 {
+        coord.0 -= 1;
+    }
+
+    if pos.y < 0 {
+        coord.1 -= 1;
+    }
+
+    let offset = ((pos.x - (CHUNK_LENGTH as isize) * coord.0).abs() as usize, pos.y.rem_euclid(CHUNK_LENGTH as isize) as usize);
 
     (coord, offset)
 }

@@ -64,20 +64,30 @@ impl<'a> InterpreterBuilder<'a> {
     }
 }
 
-struct SourceTape {
+pub struct SourceTape {
     source: Vec<u8>,
     index: usize,
 }
 
 impl EvalTape for SourceTape {
-    fn next(&mut self) -> Option<u8> {
+    fn peek_next(&self) -> Option<u8> {
         if self.index < self.source.len() {
             let value = self.source[self.index];
-            self.index += 1;
             Some(value)
         } else {
             None
         }
+    }
+
+    fn next(&mut self) -> Option<u8> {
+        let value = self.peek_next();
+
+        if value.is_some() {
+            // advance
+            self.index += 1;
+        }
+
+        value
     }
 
     fn prev(&mut self) -> Option<u8> {

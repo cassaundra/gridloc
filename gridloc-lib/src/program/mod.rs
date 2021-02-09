@@ -59,13 +59,26 @@ impl<'a, G: 'a + Grid, Rng: rand::Rng> ProgramState<'a, G, Rng> {
         }
     }
 
+    pub fn current_pointer(&self) -> Option<Rc<RefCell<Pointer>>> {
+        self.pointers.last()
+            .map(|p| p.clone())
+    }
+
+    pub fn current_tape(&self) -> Option<&Box<dyn EvalTape + 'a>> {
+        self.eval_tapes.last()
+    }
+
+    pub fn current_tape_mut(&mut self) -> Option<&mut Box<dyn EvalTape + 'a>> {
+        self.eval_tapes.last_mut()
+    }
+
     fn execute_instruction<R: BufRead, W: Write>(&mut self, instruction: Instruction, reader: &mut R, writer: &mut W) -> io::Result<()> {
         use Instruction::*;
 
         let (p_value, g_value) = {
             let pointer = self.pointers.last()
                 .unwrap()
-                .borrow() ;
+                .borrow();
 
             let p_value = pointer.value;
             let g_value = self.grid.borrow().get(&pointer.position);
@@ -291,7 +304,7 @@ impl<'a, G: 'a + Grid, Rng: rand::Rng> ProgramState<'a, G, Rng> {
                 let is_matching = instr == if forwards { EndLoop } else { StartLoop };
 
                 if is_matching {
-                    if depth > 0 {
+                    if depth > 1 {
                         depth -= 1;
                     } else {
                         break;
@@ -304,26 +317,27 @@ impl<'a, G: 'a + Grid, Rng: rand::Rng> ProgramState<'a, G, Rng> {
     }
 
     fn jump_loop_forwards(&mut self) {
-        self.jump_loop(true)
+        self.jump_loop(true);
     }
 
     fn jump_loop_backwards(&mut self) {
-        self.jump_loop(false)
+        self.jump_loop(false);
     }
 }
 
 pub trait EvalTape {
+    fn peek_next(&self) -> Option<u8>;
     fn next(&mut self) -> Option<u8>;
     fn prev(&mut self) -> Option<u8>;
 }
 
 struct GridTape<G: Grid> {
-    pointer: Rc<RefCell<Pointer>>,
-    grid: Rc<RefCell<G>>,
+    pub pointer: Rc<RefCell<Pointer>>,
+    pub grid: Rc<RefCell<G>>,
 }
 
 impl<G: Grid> EvalTape for GridTape<G> {
-    fn next(&mut self) -> Option<u8> {
+    fn peek_next(&self) -> Option<u8> {
         let pointer = &mut self.pointer.borrow_mut();
         let value = self.grid.borrow().get(&pointer.position);
 
@@ -336,6 +350,19 @@ impl<G: Grid> EvalTape for GridTape<G> {
         } else {
             None
         }
+    }
+
+    fn next(&mut self) -> Option<u8> {
+        let value = self.peek_next();
+
+        if value.is_some() {
+            // advance
+            let pointer = &mut self.pointer.borrow_mut();
+            let delta = pointer.direction.unit_vector();
+            pointer.position = pointer.position + delta;
+        }
+
+        value
     }
 
     fn prev(&mut self) -> Option<u8> {
